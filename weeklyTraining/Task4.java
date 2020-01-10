@@ -16,7 +16,7 @@ public class Task4 {
 	root = i.insert(root, 14);
 	root = i.insert(root, 13);
 	
-	System.out.print("Inorder traversal");
+	System.out.println("Inorder traversal");
 	i.inorder(root);
 	
 	

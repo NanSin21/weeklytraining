@@ -43,7 +43,8 @@ public class OperationList {
 					current=temp;
 					temp=temp.next;
 				}
-				if(current!=null) {
+				if(temp!=null) {
+					System.out.println("current is null");
 					current.next=temp.next;
 					temp=null;
 				}

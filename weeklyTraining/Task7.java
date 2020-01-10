@@ -50,9 +50,9 @@ public class Task7 {
 	}
 	
 	public static void main(String[] args) {
-		/*Scanner sc= new Scanner(System.in);
-		int sum=sc.nextInt();*/
-		int sum=21;
+		Scanner sc= new Scanner(System.in);
+		int sum=sc.nextInt();
+		//int sum=21;
 		Task7 tree = new Task7(); 
         tree.root = new TreeNode(10); 
         tree.root.left = new TreeNode(8); 

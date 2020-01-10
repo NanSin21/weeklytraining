@@ -14,7 +14,7 @@ public class Task3 {
 		op.display();
 		op.update(12, 10);
 		op.display();
-		op.delete(3);
+		op.delete(6);
 		op.display();
 	}
 	}
