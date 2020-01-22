@@ -3,6 +3,7 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
         <title>Home</title>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
@@ -65,47 +66,60 @@ body {
     text-align: left;
   }
 }
+ /* Bordered form */
+ form {
+  border: 3px solid #f1f1f1;
+}
+
+/* Full-width inputs */
+input[type=text], input[type=password] {
+  width: 100%;
+  padding: 12px 20px;
+  margin: 8px 0;
+  display: inline-block;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+}
+
+/* Set a style for all buttons */
+button {
+  background-color: #4CAF50;
+  color: white;
+  padding: 14px 20px;
+  margin: 8px 0;
+  border: none;
+  cursor: pointer;
+  width: 100%;
+}
+
+/* Add a hover effect for buttons */
+button:hover {
+  opacity: 0.8;
+}
+
+/* Add padding to containers */
+.container {
+  padding: 16px;
+}
+
+ 
 </style>
 </head>
 <body>
 
 <div class="topnav" id="myTopnav">
-  <a href="/about">Home</a>
-  <!--<a href="/task">Tasks</a>-->
-  <!--<a href="/details" class="active">Details</a>-->
+  <a href="/">Home</a>
+  <!--<a href="task.html">News</a>-->
+  <a href="/signup" class="active">Sign Up</a>
+  <a href="/login" >Login</a>
+  <!--<a href="details.html">About</a>-->
   <a href="javascript:void(0);" class="icon" onclick="myFunction()">
     <i class="fa fa-bars"></i>
   </a>
 </div>
 
-<div>
-    <h3>Intern Details</h3>  
-<table border=5 class="table table-hover">  
-  <thead>
-    <tr>
-        <th>Intern ID</th>  
-        <th>Username</th>  
-        <th>Email</th>  
-        <th>Address</th>  
-    </tr>  
-    </thead>  
-    {% for row in rows %}  
-      
-        <tr>  
-            <td>{{row["uid"]}}</td>  
-            <td>{{row["uname"]}}</td>  
-            <td>{{row["email"]}}</td>  
-            <td>{{row["address"]}}</td> 
-        </tr>  
-      
-    {% endfor %}  
-</table>  
-<br><br>  
-</div>
-
-<div>
-  <h3>Add new user</h3>
-  <form action="/login" method="post">
+<div style="padding-left:16px">
+    <form action="/signup" method="post">
     <div class="container">
       <div class="form-group">
         <label for="uname">Name:</label><input type="text" name="uname" required> 
@@ -123,29 +137,6 @@ body {
         <button type="submit" class="btn btn-default">Submit</button>
       </form> 
 </div>
-
-<div>
-  <h3>Remove Intern from the list</h3>  
-    
-  <form action="/remove" method="post">  
-  Intern Id:<input type="text" name="uid">  
-  <input type="submit" value="Submit">  
-  </form>
-  <br><br>  
-  </div>
-  
-  <div>
-    <h3>Update Intern from the list</h3>  
-      
-    <form action="/edit" method="post">  
-    Intern Id:<input type="text" name="uid"> 
-    Username:<input type="text" name="uname">
-    Email:<input type="email" name="email">
-    Address:<input type="text" name="address">
-    Password:<input type="password" placeholder="Enter Password" name="psw">
-    Submit<input type="submit" value="Submit">  
-    </form>  
-    </div>
 
 <script>
 function myFunction() {

@@ -3,15 +3,40 @@ import sqlite3
 app = Flask(__name__,template_folder='template')  
 @app.route('/')
 def home():
-    return render_template('home.html')
+    if not session.get('logged_in'):
+        return render_template('home.html')
+    else:
+        return about()
 
 @app.route('/about')
 def about():
     return render_template('about.html')
 
 
-@app.route('/login',methods = ['POST','GET'])  
-def login():
+@app.route('/adminlogin',methods = ['POST','GET'])
+def adminlogin():
+    msg="msg"
+    if request.method=="POST":
+        try:
+            aname=request.form['aname']
+            admail=request.form['admail']
+            adpassword=request.form['adpsw']
+            with sqlite3.connect("todo.db") as con:
+                cur = con.cursor()
+                cur.execute("INSERT into Admins (aname, admail, adpsw) values (?,?,?)",(aname,admail,adpassword))
+                con.commit()
+                msg = "Admin successfully Added"
+        except:
+            con.rollback()
+            msg = "We can not add the admin to the list"
+        finally:
+            return redirect(url_for("details"))
+            con.close()
+    else:
+        return render_template('admin.html')
+
+@app.route('/signup',methods = ['POST','GET'])  
+def signup():
     msg="msg"
     if request.method=="POST":
         try:
@@ -28,12 +53,36 @@ def login():
             con.rollback()
             msg = "We can not add the intern to the list"
         finally:
-            return render_template("about.html",msg = msg)
+            return redirect(url_for("details"))
             con.close()
     else:
-        return render_template('login.html')
+        return render_template('signup.html')
 
-@app.route('/details')
+@app.route('/login', methods=['POST','GET'])
+def login():
+    if request.form=='POST':
+        username=request.form['uname'] 
+        password=request.form['psw']
+        con = sqlite3.connect("todo.db")  
+        con.row_factory = sqlite3.Row  
+        cur = con.cursor()  
+        cur.execute("select uname,psw from Interns")  
+        rows = cur.fetchall()
+
+        if  password == 'psw' and username == 'uname':
+            session['logged_in'] = True
+        else:
+            flash('wrong password!')
+        return about()
+    else:
+        return render_template("login.html")
+
+@app.route("/logout")
+def logout():
+    session['logged_in'] = False
+    return home()
+
+@app.route('/details', methods=['POST','GET'])
 def details():
     con = sqlite3.connect("todo.db")  
     con.row_factory = sqlite3.Row  
@@ -58,7 +107,7 @@ def remove():
             finally:  
                 return redirect(url_for('details'))
     else:
-        return "No deletion process occured"
+        return msg
 
 @app.route('/edit',methods = ["POST"])
 def edit():
@@ -78,7 +127,7 @@ def edit():
         finally:  
             return redirect(url_for('details'))
     else:
-        return "No updation process occured"
+        return msg
 
 @app.route('/task', methods=['POST','GET'])
 def task():
@@ -95,7 +144,6 @@ def task():
                 cur.execute("INSERT into Tasks (todo, datime, details) values (?,?,?)",(todo,datime,details))
                 con.commit()
                 msg = "Task successfully Added"
-                print(msg,'msg')
         except:
             con.rollback()
             msg = "We can not add the tasks to the list"
