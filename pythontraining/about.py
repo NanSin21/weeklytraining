@@ -1,20 +1,39 @@
 from flask import *
+#import mysql.connector
+
 import sqlite3
-app = Flask(__name__,template_folder='template')  
+import os
+
+app = Flask(__name__,template_folder='template') 
+
+""" con = mysql.connector.connect(
+      host="localhost",
+      user="root",
+      passwd="",
+      database="tododb"
+) """
+
 @app.route('/')
 def home():
-    if not session.get('logged_in'):
-        return render_template('home.html')
-    else:
-        return about()
-
+    return render_template('home.html')
+    
 @app.route('/about')
 def about():
-    return render_template('about.html')
+    if 'aname' in session:
+        username = session['aname']
+        return render_template('about.html',username=username)
+        
+    if 'uname' in session:
+        username = session['uname']
+        return render_template('about.html',username=username)
+        
+    else:
+        return redirect(url_for('home'))
+   
 
 
-@app.route('/adminlogin',methods = ['POST','GET'])
-def adminlogin():
+@app.route('/adminsignup',methods = ['POST','GET'])
+def adminsignup():
     msg="msg"
     if request.method=="POST":
         try:
@@ -25,15 +44,43 @@ def adminlogin():
                 cur = con.cursor()
                 cur.execute("INSERT into Admins (aname, admail, adpsw) values (?,?,?)",(aname,admail,adpassword))
                 con.commit()
-                msg = "Admin successfully Added"
         except:
             con.rollback()
             msg = "We can not add the admin to the list"
         finally:
             return redirect(url_for("details"))
-            con.close()
+            con.close() 
     else:
         return render_template('admin.html')
+
+@app.route('/adminlogin',methods = ['POST','GET'])
+def adminlogin():
+    error = None
+    """ if 'aname' in session:
+        return redirect(url_for('about')) """
+    if request.method == 'POST':
+        username_form  = request.form['aname']
+        password_form  = request.form['adpsw']
+        con = sqlite3.connect("todo.db")  
+        con.row_factory = sqlite3.Row 
+        cur = con.cursor()
+        cur.execute("SELECT COUNT(1) FROM Admins WHERE aname = ?;", [username_form]) # CHECKS IF USERNAME EXSIST
+        if cur.fetchone()[0]:
+            cur.execute("SELECT adpsw FROM Admins WHERE aname = ?;", [username_form]) # FETCH THE PASSWORD
+            for row in cur.fetchall():
+                if password_form == row[0]:
+                    session['aname'] = request.form['aname']
+                    return redirect(url_for('details'))
+                else:
+                    error = "Invalid Credential"
+        else:
+            error = "Invalid Credential"
+        return render_template('adminlogin.html', error=error)
+        con.close()
+    else:
+        return render_template('adminlogin.html')
+    
+@app.route
 
 @app.route('/signup',methods = ['POST','GET'])  
 def signup():
@@ -48,49 +95,86 @@ def signup():
                 cur = con.cursor()
                 cur.execute("INSERT into Interns (uname, email, address, psw) values (?,?,?,?)",(uname,email,address,password))
                 con.commit()
-                msg = "Intern successfully Added"
+                session['logged_in']=True
+                msg = "Intern successfully Added" 
         except:
             con.rollback()
             msg = "We can not add the intern to the list"
+            
         finally:
-            return redirect(url_for("details"))
+            return redirect(url_for("about"))
             con.close()
     else:
+        
         return render_template('signup.html')
 
 @app.route('/login', methods=['POST','GET'])
 def login():
-    if request.form=='POST':
-        username=request.form['uname'] 
-        password=request.form['psw']
+    error = None
+    """ if 'uname' in session:
+        return redirect(url_for('about')) """
+    
+    if request.method == 'POST':
+        username_form  = request.form['uname']
+        password_form  = request.form['psw']
         con = sqlite3.connect("todo.db")  
         con.row_factory = sqlite3.Row  
-        cur = con.cursor()  
-        cur.execute("select uname,psw from Interns")  
-        rows = cur.fetchall()
-
-        if  password == 'psw' and username == 'uname':
-            session['logged_in'] = True
+        cur = con.cursor()
+        cur.execute("SELECT COUNT(1) FROM Interns WHERE uname = ?;", [username_form]) # CHECKS IF USERNAME EXSIST
+        if cur.fetchone()[0]:
+            cur.execute("SELECT psw FROM Interns WHERE uname = ?;", [username_form]) # FETCH THE PASSWORD
+            for row in cur.fetchall():
+                if password_form == row[0]:
+                    session['uname'] = request.form['uname']
+                    username = session['uname']
+                    return redirect(url_for("about"))
+                else:
+                    error = "Invalid Credential"
         else:
-            flash('wrong password!')
-        return about()
+            error = "Invalid Credential"
+        return render_template('login.html', error=error)
+        con.close()
     else:
-        return render_template("login.html")
+        return render_template('login.html')
 
 @app.route("/logout")
 def logout():
-    session['logged_in'] = False
-    return home()
+    if 'uname' in session:
+        username=session['uname']
+    if 'aname' in session:
+        username = session['aname']
+    session.pop(username, None)
+    return render_template('home.html')
 
 @app.route('/details', methods=['POST','GET'])
 def details():
     con = sqlite3.connect("todo.db")  
     con.row_factory = sqlite3.Row  
     cur = con.cursor()  
-    cur.execute("select * from Interns")  
+    cur.execute("select Interns.uid,Interns.uname,Interns.email,Interns.address,count(Tasks.tid) from Interns LEFT JOIN tasks ON Interns.uid=Tasks.uid GROUP BY Interns.uid ORDER BY COUNT(Tasks.uid) DESC")
+    #cur.execute("select * from Interns")  
     rows = cur.fetchall()
-    print(rows,'rows')  
     return render_template("details.html",rows = rows) 
+
+@app.route('/adduser', methods=['POST','GET'])
+def adduser():
+    msg="msg"
+    if request.method=="POST":
+        uname=request.form['uname']
+        email=request.form['email']
+        address=request.form['address']
+        password=request.form['psw'] 
+        with sqlite3.connect("todo.db") as con:  
+            try:  
+                cur = con.cursor()  
+                cur.execute("INSERT into Interns (uname, email, address, psw) values (?,?,?,?)",(uname,email,address,password)) 
+                msg = "record successfully deleted"  
+            except:  
+                msg = "can't be deleted"  
+            finally:  
+                return redirect(url_for("details"))
+    else:
+        return "no remove"
 
 @app.route("/remove",methods = ["POST"])  
 def remove():
@@ -105,9 +189,9 @@ def remove():
             except:  
                 msg = "can't be deleted"  
             finally:  
-                return redirect(url_for('details'))
+                return render_template(url_for('details'), msg)
     else:
-        return msg
+        return "cannot remove user"
 
 @app.route('/edit',methods = ["POST"])
 def edit():
@@ -125,7 +209,7 @@ def edit():
         except:  
             msg = "Intern can't be updated"  
         finally:  
-            return redirect(url_for('details'))
+            return render_template(url_for('details'),msg)
     else:
         return msg
 
@@ -133,17 +217,23 @@ def edit():
 def task():
     msg="msg"
     if request.method=="POST":
+        if 'uname' in session:
+            username=session['uname']
         try:
             todo=request.form['todo']
             datime=request.form['datet']
             details=request.form['descrip']
-            #print(todo,datime,details,'dadadadadata')
             with sqlite3.connect("todo.db") as con:
                 cur = con.cursor()
-                print(todo,'todo')
-                cur.execute("INSERT into Tasks (todo, datime, details) values (?,?,?)",(todo,datime,details))
+                cur.execute("SELECT COUNT(1) FROM Interns WHERE uname = ?;", [username]) # CHECKS IF USERNAME EXSIST
+                if cur.fetchone()[0]:
+                    cur.execute("SELECT uid FROM Interns WHERE uname = ?;", [username]) # FETCH THE uid
+                for row in cur.fetchall():
+                    uid=row[0]
+                    print(uid)
+                cur.execute("INSERT into Tasks (todo, datime, details,uid) values (?,?,?,?)",(todo,datime,details,uid))
                 con.commit()
-                msg = "Task successfully Added"
+                msg = "Task successfully Added" 
         except:
             con.rollback()
             msg = "We can not add the tasks to the list"
@@ -156,16 +246,15 @@ def task():
 @app.route("/view")  
 def view():  
     con = sqlite3.connect("todo.db")  
-    con.row_factory = sqlite3.Row  
+    con.row_factory = sqlite3.Row   
     cur = con.cursor()  
     cur.execute("select * from Tasks")  
-    rows = cur.fetchall()
-    print(rows)  
+    rows = cur.fetchall() 
     return render_template("todo.html",rows = rows) 
-
 
 @app.route("/delete",methods = ["POST"])  
 def delete():
+    
     msg="msg"
     if request.method=="POST":
         tid = request.form["tid"]  
@@ -177,22 +266,23 @@ def delete():
             except:  
                 msg = "can't be deleted"  
             finally:  
-                return redirect(url_for('view'))
+                return redirect(url_for('view')) 
     else:
         return "No deletion process occured"
 
 @app.route('/update',methods = ["POST"])
 def update():
+    
     if request.method=="POST":
         tid=request.form["tid"]
         try:
             todo=request.form['todo']
             datime=request.form['datet']
-            details=request.form['descrip']
+            details=request.form['descrip'] 
             with sqlite3.connect("todo.db") as con:
                 cur = con.cursor()  
                 cur.execute("update Tasks set todo=?, datime=?, details=?  where tid = ?",(todo,datime,details,tid)) 
-                msg = "record successfully updated"  
+                msg = "record successfully updated"   
         except:  
             msg = "can't be updated"  
         finally:  
@@ -200,6 +290,8 @@ def update():
     else:
         return "No updation process occured"
 
+
 if __name__ == '__main__':
+    app.secret_key = os.urandom(12)
     app.debug = True
     app.run()

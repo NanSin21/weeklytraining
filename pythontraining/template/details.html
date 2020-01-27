@@ -68,11 +68,17 @@ body {
 </style>
 </head>
 <body>
-
+  <div class="jumbotron text-center" style="margin-bottom:0; background-color: revert;">
+    <h1>TodoApp</h1>
+    <p>Home Page</p> 
+    <p>{{username}}</p>
+    <p>{{msg}}</p>
+  </div>
 <div class="topnav" id="myTopnav">
   <a href="/about">Home</a>
-  <!--<a href="/task">Tasks</a>-->
-  <!--<a href="/details" class="active">Details</a>-->
+  <a href="/details" class="active">Details</a>
+  
+  <a href="/logout">Logout</a>
   <a href="javascript:void(0);" class="icon" onclick="myFunction()">
     <i class="fa fa-bars"></i>
   </a>
@@ -86,7 +92,8 @@ body {
         <th>Intern ID</th>  
         <th>Username</th>  
         <th>Email</th>  
-        <th>Address</th>  
+        <th>Address</th>
+        <th>No. of Todos</th>  
     </tr>  
     </thead>  
     {% for row in rows %}  
@@ -96,6 +103,7 @@ body {
             <td>{{row["uname"]}}</td>  
             <td>{{row["email"]}}</td>  
             <td>{{row["address"]}}</td> 
+            <td>{{row["count(Tasks.tid)"]}}</td>
         </tr>  
       
     {% endfor %}  
@@ -105,7 +113,7 @@ body {
 
 <div>
   <h3>Add new user</h3>
-  <form action="/login" method="post">
+  <form action="/adduser" method="post">
     <div class="container">
       <div class="form-group">
         <label for="uname">Name:</label><input type="text" name="uname" required> 
@@ -146,7 +154,9 @@ body {
     Submit<input type="submit" value="Submit">  
     </form>  
     </div>
-
+    <div>
+      <button onclick="window.open('/view')" class="btn-default">Todo</button>
+    </div>
 <script>
 function myFunction() {
   var x = document.getElementById("myTopnav");

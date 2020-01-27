@@ -135,6 +135,7 @@ input[type=submit] {
   <a href="/task" class="active">Tasks</a>
   <!--<a href="login.html">Contact</a>
   <a href="/details">Details</a>-->
+  <a href="/logout">Logout</a>
   <a href="javascript:void(0);" class="icon" onclick="myFunction()">
     <i class="fa fa-bars"></i>
   </a>
@@ -142,6 +143,7 @@ input[type=submit] {
 
 <div style="padding-left:16px">
     <form action="/task" method="POST">
+      <p>{{msg}}</p>
       <div class="form-group">
           <label for="todo">Task Title</label>
           <input type="text" id="todo" name="todo" placeholder="Your task title">
@@ -158,7 +160,7 @@ input[type=submit] {
     </form>
 </div>
 <br><br>
-<button class=".btn-success"><a href="/view">View Todo List</a> </button>
+<button class=".btn-success" onclick="window.open('/view')">View Todo List</button>
 
 <script>
 function myFunction() {

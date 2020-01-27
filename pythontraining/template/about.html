@@ -69,14 +69,15 @@ body {
 </style>
 </head>
 <body>
-  <div class="jumbotron text-center" style="margin-bottom:0">
+  <div class="jumbotron text-center" style="margin-bottom:0; background-color: revert;">
     <h1>TodoApp</h1>
-    <p>Home Page</p> 
+    <p>{{username}} Home Page</p> 
   </div>
 <div class="topnav" id="myTopnav">
   <a href="/about" class="active">Home</a>
   <a href="/task">Task</a>
   <!--<a href="/details">Details</a>-->
+  
   <a href="/logout">Logout</a>
   <a href="javascript:void(0);" class="icon" onclick="myFunction()">
     <i class="fa fa-bars"></i>
@@ -87,7 +88,9 @@ body {
   <h2 style="color: white;">Home Page</h2>
   <p style="color: white;">Project work</p>
 </div>
-
+<div>
+  <button onclick="window.open('/view')" class="btn-default">Todo</button>
+</div>
 <script>
 function myFunction() {
   var x = document.getElementById("myTopnav");
