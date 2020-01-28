@@ -2,6 +2,7 @@ from flask import *
 #import mysql.connector
 
 import sqlite3
+from flask_paginate import Pagination, get_page_args
 import os
 
 app = Flask(__name__,template_folder='template') 
@@ -30,8 +31,6 @@ def about():
     else:
         return redirect(url_for('home'))
    
-
-
 @app.route('/adminsignup',methods = ['POST','GET'])
 def adminsignup():
     msg="msg"
@@ -79,8 +78,30 @@ def adminlogin():
         con.close()
     else:
         return render_template('adminlogin.html')
-    
-@app.route
+
+users = list(range(100))
+
+def get_users(offset=0, per_page=10):
+    return users[offset: offset + per_page]
+
+@app.route('/adminsearch',methods=['POST','GET'])
+def adminsearch():
+    if 'aname' in session:
+        username=session['aname']
+        #keyword = request.form['vocab']
+        keyword = str(request.args.get('vocab'))
+        con = sqlite3.connect("todo.db")  
+        con.row_factory = sqlite3.Row   
+        cur = con.cursor()  
+        cur.execute("select Interns.uname,Tasks.todo,Tasks.details from Tasks LEFT JOIN Interns ON Tasks.uid=Interns.uid where Tasks.todo LIKE '%"+keyword+"%' or Tasks.details LIKE '%"+keyword+"%'")  
+        rows = cur.fetchall()
+        page, per_page, offset = get_page_args(page_parameter='page', per_page_parameter='per_page')
+        total = len(rows)
+        pagination_users = get_users(offset=offset, per_page=10)
+        pagination = Pagination(page=page, per_page=10, total=total,css_framework='bootstrap4')
+        return render_template("adminsearch.html",username=username,users=pagination_users,page=page,per_page=per_page,pagination=pagination,rows=rows,total=total)
+        
+
 
 @app.route('/signup',methods = ['POST','GET'])  
 def signup():
@@ -95,7 +116,6 @@ def signup():
                 cur = con.cursor()
                 cur.execute("INSERT into Interns (uname, email, address, psw) values (?,?,?,?)",(uname,email,address,password))
                 con.commit()
-                session['logged_in']=True
                 msg = "Intern successfully Added" 
         except:
             con.rollback()
@@ -151,7 +171,7 @@ def details():
     con = sqlite3.connect("todo.db")  
     con.row_factory = sqlite3.Row  
     cur = con.cursor()  
-    cur.execute("select Interns.uid,Interns.uname,Interns.email,Interns.address,count(Tasks.tid) from Interns LEFT JOIN tasks ON Interns.uid=Tasks.uid GROUP BY Interns.uid ORDER BY COUNT(Tasks.uid) DESC")
+    cur.execute("select Interns.uid,Interns.uname,Interns.email,Interns.address,count(Tasks.tid) from Interns LEFT JOIN Tasks ON Interns.uid=Tasks.uid GROUP BY Interns.uid ORDER BY COUNT(Tasks.uid) DESC")
     #cur.execute("select * from Interns")  
     rows = cur.fetchall()
     return render_template("details.html",rows = rows) 
@@ -231,7 +251,7 @@ def task():
                 for row in cur.fetchall():
                     uid=row[0]
                     print(uid)
-                cur.execute("INSERT into Tasks (todo, datime, details,uid) values (?,?,?,?)",(todo,datime,details,uid))
+                cur.execute("INSERT into Tasks (todo, datime, details, uid) values (?,?,?,?)",(todo,datime,details,uid))
                 con.commit()
                 msg = "Task successfully Added" 
         except:
